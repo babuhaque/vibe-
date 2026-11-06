@@ -1,6 +1,7 @@
 import React from 'react';
 import { Droplet, ShieldCheck, MoreVertical, Globe, Moon, Sun, BellRing } from 'lucide-react';
 import { Language } from '../types/solovvo';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface HeaderProps {
   language: Language;
@@ -63,6 +64,9 @@ export const Header: React.FC<HeaderProps> = ({
               SEC
             </span>
           </button>
+
+          {/* PWA Install Button */}
+          <PWAInstallButton language={language} />
 
           {/* Emergency Alert Indicator */}
           {emergencyCount > 0 && (

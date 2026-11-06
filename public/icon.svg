@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b91c1c;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <!-- Background Circle with Safe Margin -->
+  <circle cx="96" cy="96" r="88" fill="url(#grad1)" filter="url(#shadow)" />
+  <!-- Droplet Shape -->
+  <path d="M96 28 C96 28, 48 88, 48 118 C48 144.5 69.5 166 96 166 C122.5 166, 144 144.5, 144 118 C144 88, 96 28, 96 28 Z" fill="#ffffff" />
+  <!-- Inner Red Medical Plus Symbol -->
+  <path d="M90 95 L102 95 L102 110 L117 110 L117 122 L102 122 L102 137 L90 137 L90 122 L75 122 L75 110 L90 110 Z" fill="#dc2626" />
+</svg>

@@ -1,4 +1,4 @@
-import { UserProfile, EmergencyRequest, SocialPost, SecurityAuditIssue, SecurityTestCase } from '../types/solovvo';
+import { UserProfile, EmergencyRequest, SocialPost, SecurityAuditIssue, SecurityTestCase, ScheduledDonation, DonationHistoryRecord } from '../types/solovvo';
 
 export const currentUser: UserProfile = {
   id: 'usr_donor_001',
@@ -243,6 +243,46 @@ export const initialSocialPosts: SocialPost[] = [
     isLiked: false,
     isSaved: false,
     tag: 'Awareness'
+  },
+  {
+    id: 'post_103',
+    authorId: 'usr_donor_003',
+    authorName: 'Rafiqul Islam (Mohakhali)',
+    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+    authorBloodGroup: 'A+',
+    timeAgo: 'Yesterday',
+    content: '🏕️ Free Voluntary Blood Donation Camp this Friday at Dhaka University Curzon Hall lawn! Organized jointly with Bangladesh Red Crescent Society. Free hemoglobin and blood group screening available for all students. Join us from 9:00 AM to 5:00 PM. Every drop matters! ❤️',
+    imageUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1000&q=80',
+    likesCount: 134,
+    commentsCount: 27,
+    sharesCount: 52,
+    isLiked: false,
+    isSaved: true,
+    tag: 'Blood Camp',
+    comments: [
+      {
+        id: 'c3',
+        userName: 'Sadia Akhter',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
+        text: 'Will be there with our campus volunteer squad!',
+        timeAgo: '18 hours ago'
+      }
+    ]
+  },
+  {
+    id: 'post_104',
+    authorId: 'usr_donor_006',
+    authorName: 'Ariful Huq',
+    authorAvatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80',
+    authorBloodGroup: 'A-',
+    timeAgo: '2 days ago',
+    content: 'Massive gratitude to the Solovvo network! Within 25 minutes of posting an emergency request for our patient at NICVD cardiac unit, two heroic voluntary donors arrived. Surgery was successful. This community saves real lives every day.',
+    likesCount: 210,
+    commentsCount: 31,
+    sharesCount: 68,
+    isLiked: true,
+    isSaved: false,
+    tag: 'Emergency'
   }
 ];
 
@@ -545,5 +585,89 @@ export const securityTestCases: SecurityTestCase[] = [
     status: 'PASSED',
     executionTimeMs: 64,
     description: 'Verifies that donor claim status is preserved and not rolled back when notification dispatch fails.'
+  }
+];
+
+export const initialScheduledDonations: ScheduledDonation[] = [
+  {
+    id: 'sch_don_001',
+    donorId: 'usr_donor_001',
+    donationType: 'whole_blood',
+    scheduledDate: '2026-11-20',
+    scheduledTime: '10:30 AM',
+    hospitalOrCenter: 'Quantum Blood Lab, Kakrail',
+    address: 'Shanti Nagar / Kakrail Road, Dhaka',
+    notes: 'Voluntary O+ whole blood donation. Pre-donation hydration planned.',
+    reminderEnabled: true,
+    status: 'upcoming',
+    createdAt: '2026-11-01T08:00:00Z',
+  },
+  {
+    id: 'sch_don_002',
+    donorId: 'usr_donor_001',
+    donationType: 'whole_blood',
+    scheduledDate: '2026-08-01',
+    scheduledTime: '11:00 AM',
+    hospitalOrCenter: 'Dhaka Medical College Hospital (DMCH)',
+    address: 'Secretariat Rd, Ward 20, Dhaka 1000',
+    notes: 'Emergency maternity support transfusion.',
+    reminderEnabled: false,
+    status: 'completed',
+    createdAt: '2026-07-25T14:30:00Z',
+  }
+];
+
+export const initialDonationHistoryRecords: DonationHistoryRecord[] = [
+  {
+    id: 'dh_rec_001',
+    donorId: 'usr_donor_001',
+    hospitalName: 'Dhaka Medical College Hospital (DMCH)',
+    hospitalAddress: 'Secretariat Rd, Ward 20, Dhaka 1000',
+    donationDate: '2026-08-01',
+    units: 1,
+    donationType: 'whole_blood',
+    recipientContext: 'Emergency Maternity Support (C-Section Room 3)',
+    verifiedByDoctor: 'Dr. Nusrat Jahan (Reg: BMDC-A-48910)',
+    certificateId: 'SOL-CERT-2026-0801',
+    verifiedDate: '2026-08-01T14:15:00Z',
+  },
+  {
+    id: 'dh_rec_002',
+    donorId: 'usr_donor_001',
+    hospitalName: 'National Heart Foundation Hospital & Research Institute',
+    hospitalAddress: 'Plot 4, Road 2, Section 2, Mirpur, Dhaka',
+    donationDate: '2026-04-18',
+    units: 1,
+    donationType: 'whole_blood',
+    recipientContext: 'Cardiac Bypass Surgery (OT 2)',
+    verifiedByDoctor: 'Dr. M. A. Rashid (Cardiovascular Dept)',
+    certificateId: 'SOL-CERT-2026-0418',
+    verifiedDate: '2026-04-18T11:30:00Z',
+  },
+  {
+    id: 'dh_rec_003',
+    donorId: 'usr_donor_001',
+    hospitalName: 'Bangladesh Red Crescent Society National HQ Blood Center',
+    hospitalAddress: '684-686, Bara Moghbazar, Dhaka 1217',
+    donationDate: '2026-01-10',
+    units: 1,
+    donationType: 'whole_blood',
+    recipientContext: 'Winter Voluntary Thalassemia Drive',
+    verifiedByDoctor: 'Dr. Tanvir Ahmed (Transfusion Officer)',
+    certificateId: 'SOL-CERT-2026-0110',
+    verifiedDate: '2026-01-10T15:45:00Z',
+  },
+  {
+    id: 'dh_rec_004',
+    donorId: 'usr_donor_001',
+    hospitalName: 'Bangabandhu Sheikh Mujib Medical University (BSMMU)',
+    hospitalAddress: 'Shahbagh, Dhaka 1000',
+    donationDate: '2025-09-28',
+    units: 1,
+    donationType: 'platelets',
+    recipientContext: 'Oncology / Leukemia Patient Apheresis Transfusion',
+    verifiedByDoctor: 'Dr. Shahnaz Parvin (Hematology Wing)',
+    certificateId: 'SOL-CERT-2025-0928',
+    verifiedDate: '2025-09-28T16:00:00Z',
   }
 ];

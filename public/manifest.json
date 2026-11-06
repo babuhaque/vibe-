@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "Solovvo - Blood Donation Platform",
+  "short_name": "Solovvo",
+  "description": "Professional Blood Donation & Emergency Matching Platform",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#dc2626",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   currentUser as initialCurrentUser, 
   initialDonors, 
   initialEmergencyRequests, 
-  initialSocialPosts 
+  initialSocialPosts,
+  initialScheduledDonations,
+  initialDonationHistoryRecords
 } from './data/mockData';
-import { UserProfile, EmergencyRequest, SocialPost, Language } from './types/solovvo';
+import { UserProfile, EmergencyRequest, SocialPost, Language, ScheduledDonation, DonationHistoryRecord } from './types/solovvo';
 import { Header } from './components/Header';
 import { BottomNav, TabType } from './components/BottomNav';
 import { SocialFeed } from './components/SocialFeed';
@@ -17,12 +19,15 @@ import { SecurityAuditModal } from './components/SecurityAuditModal';
 import { EmergencyRequestModal } from './components/EmergencyRequestModal';
 import { ThreeDotMenuModal } from './components/ThreeDotMenuModal';
 import { AdminPanelModal } from './components/AdminPanelModal';
+import { onServiceWorkerNotificationClick } from './utils/serviceWorkerManager';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile>(initialCurrentUser);
   const [donors, setDonors] = useState<UserProfile[]>(initialDonors);
   const [emergencyRequests, setEmergencyRequests] = useState<EmergencyRequest[]>(initialEmergencyRequests);
   const [posts, setPosts] = useState<SocialPost[]>(initialSocialPosts);
+  const [scheduledDonations, setScheduledDonations] = useState<ScheduledDonation[]>(initialScheduledDonations);
+  const [donationHistoryRecords, setDonationHistoryRecords] = useState<DonationHistoryRecord[]>(initialDonationHistoryRecords);
   
   // Navigation & Modal states
   const [activeTab, setActiveTab] = useState<TabType>('home');
@@ -33,6 +38,26 @@ export default function App() {
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState<boolean>(false);
   const [isThreeDotOpen, setIsThreeDotOpen] = useState<boolean>(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState<boolean>(false);
+
+  // Handle incoming Service Worker notification clicks
+  useEffect(() => {
+    // If launched via notification click query param
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam === 'account' || tabParam === 'activity' || tabParam === 'notifications') {
+        setActiveTab(tabParam as TabType);
+      }
+    }
+
+    // Subscribe to postMessage events from the Service Worker
+    const unsubscribe = onServiceWorkerNotificationClick((appointmentId) => {
+      console.log('[App] Navigating to account for appointment:', appointmentId);
+      setActiveTab('account');
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Social feed handlers
   const handleLikePost = (postId: string) => {
@@ -99,6 +124,10 @@ export default function App() {
     setPosts([newPost, ...posts]);
   };
 
+  const handleDeletePost = (postId: string) => {
+    setPosts(prev => prev.filter(p => p.id !== postId));
+  };
+
   // Donor management handlers
   const handleUpdateAvailability = (available: boolean) => {
     setCurrentUser(prev => ({ ...prev, isAvailableDonor: available }));
@@ -140,6 +169,80 @@ export default function App() {
       : 'রক্তদানের প্রতিশ্রুতি নিবন্ধিত হয়েছে! হাসপাতাল প্রতিনিধিকে জানানো হয়েছে।');
   };
 
+  // Donation scheduler handlers
+  const handleAddScheduledDonation = (donationData: Omit<ScheduledDonation, 'id' | 'createdAt'>) => {
+    const newAppointment: ScheduledDonation = {
+      ...donationData,
+      id: `sch_don_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    setScheduledDonations(prev => [newAppointment, ...prev]);
+  };
+
+  const handleUpdateScheduledStatus = (id: string, status: ScheduledDonation['status']) => {
+    setScheduledDonations(prev => prev.map(s => {
+      if (s.id === id) {
+        return { ...s, status };
+      }
+      return s;
+    }));
+
+    if (status === 'completed') {
+      const todayIso = new Date().toISOString().split('T')[0];
+      setCurrentUser(prev => ({
+        ...prev,
+        donationCount: prev.donationCount + 1,
+        lastDonationDate: todayIso,
+        badges: prev.donationCount + 1 >= 8 && !prev.badges.includes('Hero Donor (8+)')
+          ? [...prev.badges, 'Hero Donor (8+)']
+          : prev.badges
+      }));
+      alert(language === 'en'
+        ? '🎉 Congratulations! Your verified blood donation has been recorded. Your medical interval recovery countdown has restarted.'
+        : '🎉 অভিনন্দন! আপনার সফল রক্তদান লিপিবদ্ধ হয়েছে। স্বাস্থ্য বিরতির কাউন্টডাউন পুনর্নির্ধারিত করা হয়েছে।');
+    }
+  };
+
+  const handleDeleteScheduledDonation = (id: string) => {
+    setScheduledDonations(prev => prev.filter(s => s.id !== id));
+  };
+
+  // Donation history record handler
+  const handleAddDonationRecord = (recordData: Omit<DonationHistoryRecord, 'id' | 'certificateId' | 'verifiedDate'>) => {
+    const certId = `SOL-CERT-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+    const newRecord: DonationHistoryRecord = {
+      ...recordData,
+      id: `dh_rec_${Date.now()}`,
+      certificateId: certId,
+      verifiedDate: new Date().toISOString(),
+    };
+    setDonationHistoryRecords(prev => [newRecord, ...prev]);
+
+    // Update currentUser stats: increment donation count, update lastDonationDate, check badge thresholds
+    const newCount = currentUser.donationCount + recordData.units;
+    const updatedBadges = [...currentUser.badges];
+    if (newCount >= 8 && !updatedBadges.includes('Hero Donor (8+)')) {
+      updatedBadges.push('Hero Donor (8+)');
+    }
+    if (newCount >= 10 && !updatedBadges.includes('Life Saver (10+)')) {
+      updatedBadges.push('Life Saver (10+)');
+    }
+    if (newCount >= 25 && !updatedBadges.includes('Platinum Donor (25+)')) {
+      updatedBadges.push('Platinum Donor (25+)');
+    }
+
+    setCurrentUser(prev => ({
+      ...prev,
+      donationCount: newCount,
+      lastDonationDate: recordData.donationDate,
+      badges: updatedBadges
+    }));
+
+    alert(language === 'en'
+      ? `🩸 Verified donation logged successfully! Life-saving certificate ${certId} issued.`
+      : `🩸 সফল রক্তদান লিপিবদ্ধ হয়েছে! জীবন রক্ষাকারী সার্টিফিকেট ${certId} ইস্যু করা হয়েছে।`);
+  };
+
   const emergencyCount = emergencyRequests.filter(r => r.status === 'open').length;
 
   return (
@@ -168,6 +271,7 @@ export default function App() {
             onSavePost={handleSavePost}
             onAddComment={handleAddComment}
             onCreatePost={handleCreatePost}
+            onDeletePost={handleDeletePost}
             onOpenEmergencyModal={() => setIsEmergencyModalOpen(true)}
           />
         )}
@@ -199,9 +303,15 @@ export default function App() {
         {activeTab === 'account' && (
           <DonorManagement
             currentUser={currentUser}
+            scheduledDonations={scheduledDonations}
+            donationHistoryRecords={donationHistoryRecords}
             language={language}
             onUpdateAvailability={handleUpdateAvailability}
             onUpdateIntervalDays={handleUpdateIntervalDays}
+            onAddScheduledDonation={handleAddScheduledDonation}
+            onUpdateScheduledStatus={handleUpdateScheduledStatus}
+            onDeleteScheduledDonation={handleDeleteScheduledDonation}
+            onAddDonationRecord={handleAddDonationRecord}
           />
         )}
       </main>

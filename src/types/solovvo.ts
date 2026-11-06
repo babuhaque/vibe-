@@ -106,3 +106,32 @@ export interface SecurityTestCase {
   executionTimeMs: number;
   description: string;
 }
+
+export interface ScheduledDonation {
+  id: string;
+  donorId: string;
+  donationType: 'whole_blood' | 'platelets' | 'plasma' | 'double_red';
+  scheduledDate: string; // YYYY-MM-DD
+  scheduledTime: string; // e.g. "10:30 AM"
+  hospitalOrCenter: string;
+  address: string;
+  notes?: string;
+  reminderEnabled: boolean;
+  status: 'upcoming' | 'completed' | 'cancelled';
+  createdAt: string;
+}
+
+export interface DonationHistoryRecord {
+  id: string;
+  donorId: string;
+  hospitalName: string;
+  hospitalAddress: string;
+  donationDate: string; // YYYY-MM-DD
+  units: number;
+  donationType: 'whole_blood' | 'platelets' | 'plasma';
+  recipientContext?: string;
+  verifiedByDoctor?: string;
+  certificateId: string;
+  verifiedDate: string;
+}
+
