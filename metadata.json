@@ -1,0 +1,6 @@
+{
+  "name": "Solovvo - Blood Donation & Social Platform",
+  "description": "Professional Blood Donation and Social Networking Platform for emergency donor matching, donor management, and community health.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

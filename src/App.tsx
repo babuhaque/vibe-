@@ -1,0 +1,254 @@
+import React, { useState } from 'react';
+import { 
+  currentUser as initialCurrentUser, 
+  initialDonors, 
+  initialEmergencyRequests, 
+  initialSocialPosts 
+} from './data/mockData';
+import { UserProfile, EmergencyRequest, SocialPost, Language } from './types/solovvo';
+import { Header } from './components/Header';
+import { BottomNav, TabType } from './components/BottomNav';
+import { SocialFeed } from './components/SocialFeed';
+import { BloodSearch } from './components/BloodSearch';
+import { DonorManagement } from './components/DonorManagement';
+import { ActivityView } from './components/ActivityView';
+import { NotificationCenter } from './components/NotificationCenter';
+import { SecurityAuditModal } from './components/SecurityAuditModal';
+import { EmergencyRequestModal } from './components/EmergencyRequestModal';
+import { ThreeDotMenuModal } from './components/ThreeDotMenuModal';
+import { AdminPanelModal } from './components/AdminPanelModal';
+
+export default function App() {
+  const [currentUser, setCurrentUser] = useState<UserProfile>(initialCurrentUser);
+  const [donors, setDonors] = useState<UserProfile[]>(initialDonors);
+  const [emergencyRequests, setEmergencyRequests] = useState<EmergencyRequest[]>(initialEmergencyRequests);
+  const [posts, setPosts] = useState<SocialPost[]>(initialSocialPosts);
+  
+  // Navigation & Modal states
+  const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [language, setLanguage] = useState<Language>('en');
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  
+  const [isSecurityAuditOpen, setIsSecurityAuditOpen] = useState<boolean>(false);
+  const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState<boolean>(false);
+  const [isThreeDotOpen, setIsThreeDotOpen] = useState<boolean>(false);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState<boolean>(false);
+
+  // Social feed handlers
+  const handleLikePost = (postId: string) => {
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        const isLiked = !p.isLiked;
+        return {
+          ...p,
+          isLiked,
+          likesCount: isLiked ? p.likesCount + 1 : p.likesCount - 1
+        };
+      }
+      return p;
+    }));
+  };
+
+  const handleSavePost = (postId: string) => {
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        return { ...p, isSaved: !p.isSaved };
+      }
+      return p;
+    }));
+  };
+
+  const handleAddComment = (postId: string, commentText: string) => {
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        const newComment = {
+          id: `c_${Date.now()}`,
+          userName: currentUser.name,
+          avatar: currentUser.avatarUrl,
+          text: commentText,
+          timeAgo: 'Just now'
+        };
+        return {
+          ...p,
+          commentsCount: p.commentsCount + 1,
+          comments: [...(p.comments || []), newComment]
+        };
+      }
+      return p;
+    }));
+  };
+
+  const handleCreatePost = (content: string, imageUrl?: string, tag?: SocialPost['tag']) => {
+    const newPost: SocialPost = {
+      id: `post_${Date.now()}`,
+      authorId: currentUser.id,
+      authorName: currentUser.name,
+      authorAvatar: currentUser.avatarUrl,
+      authorBloodGroup: currentUser.bloodGroup,
+      timeAgo: 'Just now',
+      content,
+      imageUrl,
+      likesCount: 0,
+      commentsCount: 0,
+      sharesCount: 0,
+      isLiked: false,
+      isSaved: false,
+      tag: tag || 'Donation Story',
+      comments: []
+    };
+    setPosts([newPost, ...posts]);
+  };
+
+  // Donor management handlers
+  const handleUpdateAvailability = (available: boolean) => {
+    setCurrentUser(prev => ({ ...prev, isAvailableDonor: available }));
+  };
+
+  const handleUpdateIntervalDays = (days: number) => {
+    setCurrentUser(prev => ({ ...prev, donationIntervalDays: days }));
+  };
+
+  // Emergency request handlers
+  const handleCreateEmergencyRequest = (reqData: Omit<EmergencyRequest, 'id' | 'createdAt' | 'expiresAt' | 'claimedByDonorIds' | 'bagsFulfilled'>) => {
+    const newReq: EmergencyRequest = {
+      ...reqData,
+      id: `req_emg_${Math.floor(Math.random() * 9000) + 1000}`,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      bagsFulfilled: 0,
+      claimedByDonorIds: []
+    };
+    setEmergencyRequests([newReq, ...emergencyRequests]);
+  };
+
+  // Atomic commitment simulation
+  const handleClaimRequest = (reqId: string) => {
+    setEmergencyRequests(prev => prev.map(r => {
+      if (r.id === reqId && r.bagsFulfilled < r.bagsRequired) {
+        const newFulfilled = r.bagsFulfilled + 1;
+        return {
+          ...r,
+          bagsFulfilled: newFulfilled,
+          status: newFulfilled >= r.bagsRequired ? 'reserved' : 'open',
+          claimedByDonorIds: [...r.claimedByDonorIds, currentUser.id]
+        };
+      }
+      return r;
+    }));
+    alert(language === 'en' 
+      ? 'Donation commitment recorded! Hospital attendant has been alerted.' 
+      : 'রক্তদানের প্রতিশ্রুতি নিবন্ধিত হয়েছে! হাসপাতাল প্রতিনিধিকে জানানো হয়েছে।');
+  };
+
+  const emergencyCount = emergencyRequests.filter(r => r.status === 'open').length;
+
+  return (
+    <div className={`min-h-screen ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
+      
+      {/* Top Header */}
+      <Header
+        language={language}
+        onLanguageChange={setLanguage}
+        isDarkMode={isDarkMode}
+        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+        onOpenThreeDotMenu={() => setIsThreeDotOpen(true)}
+        onOpenSecurityAudit={() => setIsSecurityAuditOpen(true)}
+        emergencyCount={emergencyCount}
+        onOpenEmergencyView={() => setActiveTab('activity')}
+      />
+
+      {/* Main Content Area */}
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 pt-4">
+        {activeTab === 'home' && (
+          <SocialFeed
+            posts={posts}
+            currentUser={currentUser}
+            language={language}
+            onLikePost={handleLikePost}
+            onSavePost={handleSavePost}
+            onAddComment={handleAddComment}
+            onCreatePost={handleCreatePost}
+            onOpenEmergencyModal={() => setIsEmergencyModalOpen(true)}
+          />
+        )}
+
+        {activeTab === 'search' && (
+          <BloodSearch
+            donors={donors}
+            language={language}
+          />
+        )}
+
+        {activeTab === 'activity' && (
+          <ActivityView
+            requests={emergencyRequests}
+            language={language}
+            onOpenEmergencyModal={() => setIsEmergencyModalOpen(true)}
+            onClaimRequest={handleClaimRequest}
+          />
+        )}
+
+        {activeTab === 'notifications' && (
+          <NotificationCenter
+            language={language}
+            onOpenEmergencyModal={() => setIsEmergencyModalOpen(true)}
+            onOpenSecurityAudit={() => setIsSecurityAuditOpen(true)}
+          />
+        )}
+
+        {activeTab === 'account' && (
+          <DonorManagement
+            currentUser={currentUser}
+            language={language}
+            onUpdateAvailability={handleUpdateAvailability}
+            onUpdateIntervalDays={handleUpdateIntervalDays}
+          />
+        )}
+      </main>
+
+      {/* Bottom Navigation */}
+      <BottomNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        language={language}
+        unreadNotificationsCount={3}
+        onOpenEmergencyModal={() => setIsEmergencyModalOpen(true)}
+      />
+
+      {/* Security Audit Modal (Stage 3.0.7 Verification) */}
+      <SecurityAuditModal
+        isOpen={isSecurityAuditOpen}
+        onClose={() => setIsSecurityAuditOpen(false)}
+        language={language}
+      />
+
+      {/* Emergency Blood Request Creation Modal */}
+      <EmergencyRequestModal
+        isOpen={isEmergencyModalOpen}
+        onClose={() => setIsEmergencyModalOpen(false)}
+        language={language}
+        onSubmitRequest={handleCreateEmergencyRequest}
+      />
+
+      {/* Three-Dot Options Modal */}
+      <ThreeDotMenuModal
+        isOpen={isThreeDotOpen}
+        onClose={() => setIsThreeDotOpen(false)}
+        language={language}
+        onLanguageChange={setLanguage}
+        isDarkMode={isDarkMode}
+        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+        onNavigateToTab={(tab) => setActiveTab(tab)}
+        onOpenAdminPanel={() => setIsAdminPanelOpen(true)}
+      />
+
+      {/* Admin Panel Modal */}
+      <AdminPanelModal
+        isOpen={isAdminPanelOpen}
+        onClose={() => setIsAdminPanelOpen(false)}
+        language={language}
+      />
+
+    </div>
+  );
+}
